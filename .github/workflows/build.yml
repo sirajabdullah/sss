@@ -1,4 +1,4 @@
-name: Build APK
+name: build
 
 on:
   push:
@@ -21,17 +21,19 @@ jobs:
 
       - name: Unzip
         run: |
-          z=$(find . -maxdepth 4 -iname "*Gemini*.zip" | head -n1)
+          z=$(find . -maxdepth 4 -iname "*.zip" | head -n1)
           if [ -z "$z" ]; then echo "ZIP not found in repo"; ls -la; exit 1; fi
           echo "Using $z"
-          unzip -o "$z" -d project
+          mkdir -p proj
+          unzip -q -o "$z" -d proj
 
       - name: Build
         run: |
-          cd project/PokerAI
+          d=$(dirname "$(find proj -name settings.gradle.kts | head -n1)")
+          cd "$d"
           gradle assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PokerAI-debug-apk
-          path: project/PokerAI/app/build/outputs/apk/debug/*.apk
+          name: PokerAI-apk
+          path: proj/**/build/outputs/apk/debug/*.apk
